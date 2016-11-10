@@ -14,11 +14,11 @@ import org.eclipse.jetty.security.HashLoginService
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.bio.SocketConnector
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
+import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.server.session.HashSessionManager
 import org.eclipse.jetty.server.session.SessionHandler
-import org.eclipse.jetty.server.ssl.SslSocketConnector
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector
 import org.eclipse.jetty.util.component.LifeCycle
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.util.resource.ResourceCollection
@@ -76,7 +76,7 @@ class JettyConfigurerImpl implements JettyConfigurer {
     boolean newConnector = false
     if(params.httpEnabled && !httpConn) {
       newConnector = true
-      httpConn = new SocketConnector()
+      httpConn = new SelectChannelConnector()
       httpConn.soLingerTime = -1
     }
 
@@ -99,7 +99,7 @@ class JettyConfigurerImpl implements JettyConfigurer {
     boolean newHttpsConnector = false
     if(params.httpsEnabled && !httpsConn) {
       newHttpsConnector = true
-      httpsConn = new SslSocketConnector(new SslContextFactory())
+      httpsConn = new SslSelectChannelConnector(new SslContextFactory())
       httpsConn.soLingerTime = -1
     }
 
@@ -221,12 +221,12 @@ class JettyConfigurerImpl implements JettyConfigurer {
 
   @Override
   def findHttpConnector(server) {
-    server.connectors.find { (it instanceof SocketConnector) && !(it instanceof SslSocketConnector) }
+    server.connectors.find { (it instanceof SelectChannelConnector) && !(it instanceof SslSelectChannelConnector) }
   }
 
   @Override
   def findHttpsConnector(server) {
-    server.connectors.find { it instanceof SslSocketConnector }
+    server.connectors.find { it instanceof SslSelectChannelConnector }
   }
 
   @Override
