@@ -124,8 +124,7 @@ class GrettyPlugin implements Plugin<Project> {
 
     def runtimeConfig = project.configurations.findByName('runtime')
     if(runtimeConfig) {
-      def artifacts = runtimeConfig.copyRecursive().resolvedConfiguration.resolvedArtifacts
-      if(artifacts.find { it.name == 'slf4j-api' } && !artifacts.find { it.name in ['slf4j-nop', 'slf4j-simple', 'slf4j-log4j12', 'slf4j-jdk14', 'logback-classic', 'log4j-slf4j-impl'] }) {
+      if(runtimeConfig.allDependencies.find { it.name == 'slf4j-api' } && !runtimeConfig.allDependencies.find { it.name in ['slf4j-nop', 'slf4j-simple', 'slf4j-log4j12', 'slf4j-jdk14', 'logback-classic', 'log4j-slf4j-impl'] }) {
         project.dependencies {
           compile "org.slf4j:slf4j-nop:$slf4jVersion"
         }
@@ -793,15 +792,14 @@ class GrettyPlugin implements Plugin<Project> {
     if(!project.rootProject.hasProperty('gretty_')) {
       Project rootProject = project.rootProject
       rootProject.ext.gretty_ = [:]
-      rootProject.ext.gretty_.projects = []
-      rootProject.allprojects { proj ->
-        afterEvaluate {
+      rootProject.ext.gretty_.evalProjectCount = rootProject.allprojects.sum 0, { it.state.executed ? 0 : 1 }
+      for(def p in rootProject.allprojects)
+        p.afterEvaluate { proj ->
           afterProjectEvaluate(proj)
-          rootProject.ext.gretty_.projects.add proj
-          if(rootProject.ext.gretty_.projects.size() == rootProject.allprojects.size())
+          rootProject.ext.gretty_.evalProjectCount = rootProject.ext.gretty_.evalProjectCount - 1
+          if(rootProject.ext.gretty_.evalProjectCount == 0)
             afterAllProjectsEvaluate(rootProject)
         }
-      }
     }
   } // apply
 }
